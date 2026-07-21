@@ -1,0 +1,6 @@
+# 编译产物
+/registry-proxy
+/registry-proxy.exe
+
+# 本地运行日志
+*.log

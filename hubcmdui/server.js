@@ -46,8 +46,16 @@ app.use(session({
   secret: config.sessionSecret || 'OhTq3faqSKoxbV%NJV',
   resave: true,
   saveUninitialized: true,
-  cookie: { 
-    secure: config.secureSession || false,
+  cookie: {
+    // Secure 仅在 HTTPS 下才应开启；明文访问(如 http://IP:30080)必须关闭，
+    // 否则浏览器拒绝保存 cookie，导致会话丢失、验证码永远报错。
+    // 优先级：环境变量 SECURE_COOKIE(true/false) > 配置文件中的 secureSession。
+    secure: process.env.SECURE_COOKIE === 'true' ? true
+          : process.env.SECURE_COOKIE === 'false' ? false
+          : (config.secureSession || false),
+    sameSite: 'lax',
+    httpOnly: true,
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7天(一周)
   }
 }));

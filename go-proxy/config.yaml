@@ -1,0 +1,91 @@
+server:
+  # 监听地址（容器内建议用 5000，对外由 nginx/caddy 反代）
+  listen: ":5000"
+  read_timeout: 60
+  write_timeout: 0      # 0 = 不限制，便于流式传输超大镜像层
+  idle_timeout: 120
+
+# 当请求的 Host 没有命中任何 hosts 时，使用这个注册表
+default: dockerhub
+
+# 日志级别：quiet（仅错误）/ normal（默认，跳过 blob 噪声）/ debug（全部请求）
+log_level: normal
+
+registries:
+  # ============ Docker Hub ============
+  # 注意 upstream 必须是 registry-1.docker.io（registry.docker.io 会重定向）
+  - name: dockerhub
+    hosts:
+      - "hub.your_domain_name"
+      - "registry-1.docker.io"
+    upstream: "https://registry-1.docker.io"
+    auth:
+      type: token
+      # 可选：填写 Docker Hub 账号密码，用于提升匿名拉取频率限制
+      username: ""
+      password: ""
+    token_cache_ttl: 3600
+
+  # ============ GitHub Container Registry ============
+  - name: ghcr
+    hosts:
+      - "ghcr.your_domain_name"
+    upstream: "https://ghcr.io"
+    auth:
+      type: token
+
+  # ============ Google Container Registry ============
+  - name: gcr
+    hosts:
+      - "gcr.your_domain_name"
+    upstream: "https://gcr.io"
+    auth:
+      type: token
+
+  # ============ k8s.gcr.io (旧) ============
+  - name: k8sgcr
+    hosts:
+      - "k8s-gcr.your_domain_name"
+    upstream: "https://k8s.gcr.io"
+    auth:
+      type: token
+
+  # ============ registry.k8s.io ============
+  - name: k8s
+    hosts:
+      - "k8s.your_domain_name"
+    upstream: "https://registry.k8s.io"
+    auth:
+      type: token
+
+  # ============ Quay ============
+  - name: quay
+    hosts:
+      - "quay.your_domain_name"
+    upstream: "https://quay.io"
+    auth:
+      type: token
+
+  # ============ Microsoft Container Registry ============
+  - name: mcr
+    hosts:
+      - "mcr.your_domain_name"
+    upstream: "https://mcr.microsoft.com"
+    auth:
+      type: token
+
+  # ============ Elastic ============
+  - name: elastic
+    hosts:
+      - "elastic.your_domain_name"
+    upstream: "https://docker.elastic.co"
+    auth:
+      type: token
+
+  # ============ NVIDIA NGC ============
+  - name: nvcr
+    hosts:
+      - "nvcr.your_domain_name"
+    upstream: "https://nvcr.io"
+    auth:
+      type: token

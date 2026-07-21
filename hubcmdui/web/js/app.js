@@ -91,6 +91,13 @@ async function initializeModules() {
             // console.error('网络测试未定义');
         }
 
+        // 初始化代理管理（Go 纯代理）
+        if (typeof goProxyManager !== 'undefined') {
+            await goProxyManager.init();
+        } else {
+            // console.error('代理管理模块未定义');
+        }
+
         // 加载监控配置
         await loadMonitoringConfig();
         

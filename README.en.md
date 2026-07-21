@@ -1,12 +1,12 @@
 <p align="right">
-    <a href="./README.md">中文</a> | <strong>English</strong>
+   <a href="./README.md">中文</a> | <strong>English</strong>
 </p>
 
 <div style="text-align: center">
   <p align="center">
   <img src="https://github.com/dqzboy/Docker-Proxy/assets/42825450/c187d66f-152e-4172-8268-e54bd77d48bb" width="230px" height="200px">
       <br>
-      <i>Self-hosted Docker image acceleration service — one-click deployment for Docker, K8s, Quay, Ghcr, Mcr, Elastic, NVCR and other registry proxy/management services.</i>
+      <i>Build your own Docker image acceleration service and deploy Docker, Kubernetes, Quay, Ghcr, Mcr, Elastic, NVCR, and other image acceleration and management services with a single click.</i>
   </p>
 </div>
 
@@ -19,196 +19,131 @@
 [![HitCount](https://views.whatilearened.today/views/github/dqzboy/Docker-Proxy.svg)](https://github.com/dqzboy/Docker-Proxy)
 [![GitHub license](https://img.shields.io/github/license/dqzboy/Docker-Proxy)](https://github.com/dqzboy/Docker-Proxy/blob/main/LICENSE)
 
-
-📢 <a href="https://t.me/+ghs_XDp1vwxkMGU9" style="font-size: 15px;">Docker Proxy-Communication Group</a>
+📢 <a href="https://t.me/+ghs_XDp1vwxkMGU9" style="font-size: 15px;">Docker Proxy TG Group</a>
 
 </div>
 
 ---
 
-## 📝 Preparation
-⚠️  **Important**: Choose a server located outside China and ensure it is not blocked. For domains, domestic ICP filing is not required. You can obtain free domains from various providers. If you choose to install Caddy during the one-click deployment, HTTPS will be configured automatically. If you choose Nginx, you will need to obtain and configure an SSL certificate yourself (for example via Let's Encrypt or Cloudflare).
+## 📝 Prerequisites
+⚠️ **Important**: Choose an overseas server that is not blocked. Domain names do not require ICP filing in China. You can also obtain a free domain through some platforms. During one-click deployment, if you choose to install Caddy, it will automatically configure HTTPS. If you choose to deploy Nginx, you need to apply for a free SSL certificate yourself, or implement SSL encryption through other means.
 
 <details>
-<summary><strong>Free domain / TLS certificate options</strong></summary>
+<summary><strong>Free Domain SSL Certificate Application</strong></summary>
 <div>
 
-**Option 1:** Use Acme.sh to automatically obtain and renew Let's Encrypt certificates — guide: https://www.dqzboy.com/16437.html
+**Method 1:** [Acme.sh automatically generates and renews free Let's Encrypt SSL certificates](https://www.dqzboy.com/16437.html)
 
-**Option 2:** Host your DNS on Cloudflare and enable its free SSL/TLS service.
+**Method 2:** Host your domain on [Cloudflare to enable free SSL certificates](https://www.cloudflare.com/zh-cn/application-services/products/ssl/)
 
-**Option 3:** Use third-party providers that offer free DV certificates suitable for personal sites and small projects.
+**Method 3:** You can apply for a free domain certificate through third-party platforms (free ones are generally DV certificates), suitable for personal websites, blogs, and small projects
 
-</div>
-</details>
-
-<details>
-<summary><strong>Alternative deployment options if you lack the recommended environment</strong></summary>
-<div>
-
-**Scheme 1:** Deploy to free or low-cost cloud platforms such as [ClawCloud](cloud/ClawCloud/README.md) or [Render](cloud/Render/README.md).
-
-**Scheme 2:** If you have a single server and do not want to use a domain or TLS, configure Docker's `/etc/docker/daemon.json` with `insecure-registries` to point to your proxy.
-
-**Scheme 3:** When deploying from within China, the installer can configure HTTP proxy settings to help install Docker and Docker Compose.
-
-**Scheme 4:** Use the Cloudflare Workers based proxy project: https://github.com/dqzboy/Workers-Proxy-Docker
-
-</div>
 </details>
 
 ---
 
-> **If you encounter issues during deployment, check the problem summary:** [Issue/issue.md](Issue/issue.md). Try to troubleshoot using the documented cases first.
-
+> **If you encounter problems or questions during deployment, click here [Issue Summary](Issue/issue.md) to check whether your case is covered! Try to resolve it yourself first.**
 
 ---
 
 ## 🔨 Features
-- One‑click deployment of Docker registry proxy services, supporting multiple upstream registries (Docker Hub, ghcr, quay, k8s, mcr.microsoft.com, docker.elastic.co, nvcr, etc.).
-- Automatic environment checks and installation of dependencies (Docker, Docker Compose, Nginx, Caddy, etc.).
-- Automatic generation of Nginx/Caddy reverse‑proxy configuration for selected services.
-- Optional Docker Hub authentication to pull private images and mitigate Docker Hub rate limits (see docs/issues for configuration).
-- Configurable proxy cache TTL (`PROXY_TTL`) and IP whitelist/blacklist for access control.
-- Service management, configuration management, uninstall, and authentication features for day‑to‑day operations.
-- One‑click configuration for local Docker daemon proxy and container HTTP proxy (`HTTP_PROXY`) — HTTP only.
-- Installer helpers for servers inside China to work around Docker/Compose installation issues.
-- Includes HubCMD‑UI web panel for browsing, image search, documentation, container management, and monitoring alerts.
+- [x] **Pure Go implementation, zero disk cache**: A single process automatically routes by `Host` to major public registries (Docker Hub, GHCR, Quay, K8s, MCR, Elastic, NVCR, etc.), performs server-side token authentication and streams the response without writing to disk or consuming local storage.
+- [x] **One-click deployment**: Automatically checks and installs Docker / Compose dependencies, supporting both the image-pull mode (`docker-compose.yaml`) and the source-build mode (`docker-compose-build.yaml`).
+- [x] **Optional reverse proxy**: Automatically deploys Nginx or Caddy as a reverse proxy and renders the corresponding configuration (HTTPS, Host rewriting).
+- [x] **Upstream account authentication**: You can configure an upstream username/password; the proxy server exchanges them for a Bearer Token, enabling pulls of private Docker Hub images and mitigating official rate limits. [Configuration reference](https://github.com/dqzboy/Docker-Proxy/blob/main/Issue/issue.md#12%E5%85%B3%E4%BA%8Edocker-hub%E5%85%8D%E8%B4%B9%E6%8B%89%E5%8F%96%E6%94%BF%E7%AD%96%E5%86%8D%E6%AC%A1%E5%8F%98%E6%9B%B4%E5%90%8E%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
+- [x] **HubCMD-UI management panel**: Manage proxies, configure server parameters and hot-reload directly from the web UI without manually editing `config.yaml`; includes image search, documentation tutorials, container management, monitoring & alerting, etc.
+- [x] **Cross-platform images**: Build and push multi-arch images (linux/amd64, linux/arm64, etc.) to Docker Hub via `docker buildx` (`dqzboy/registry`, `dqzboy/hubcmd-ui`).
+- [x] **Daily operations management**: Provides full lifecycle management including service start / stop / restart / logs / update / uninstall.
 
+## 📦 Deployment
 
-## 📦 Deploy
-### Deploy using the project installer script
-```shell
-# CentOS / RHEL / Rocky
-yum -y install curl
-# Ubuntu / Debian
-apt -y install curl
-
-# For environments outside China (recommended)
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh)"
-
-# For domestic environments: CDN mirror
-bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/dqzboy/Docker-Proxy/install/DockerProxy_Install.sh)"
-
-# Alternative GitHub raw proxy
-bash -c "$(curl -fsSL https://ghp.ci/https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh)"
-```
-
-- **Hubcmd-UI** panel can be installed via the installer script. Demo: https://dqzboy.github.io/proxyui/ (use after deployment to see full features).
-
-```
-Run the installer and select options: 2 ---> 8 ---> 1
-```
-
-### Deploy to third‑party platforms
-<details>
-<summary><strong>Deploy to Claw Cloud</strong></summary>
-<div>
-
-Claw Cloud may provide free credits and easy deployment — see cloud/ClawCloud/README.md for instructions.
-
-</div>
-</details>
-
-<details>
-<summary><strong>Deploy to Render</strong></summary>
-<div>
-
-Render provides free tiers; see cloud/Render/README.md for a quick guide.
-
-</div>
-</details>
-
-<details>
-<summary><strong>Deploy to Koyeb</strong></summary>
-<div>
-
-Koyeb's assigned domains may be unstable for some regions; see cloud/Koyeb/README.md for details.
-
-</div>
-</details>
-
-
-### Docker Compose deployment
-<details>
-<summary><strong>Manual container deployment (expand)</strong></summary>
-<div>
-
-**⚠️ Note:** Download the config file for the registries you need. The `docker-compose.yaml` includes many services by default — keep only the ones you will run.
-
-1. Download the corresponding `yml` from the [config](https://github.com/dqzboy/Docker-Proxy/tree/main/config) directory.
-
-2. Download `docker-compose.yaml` to the same directory as the config files.
-
-3. Start containers:
-```shell
+### Docker Deployment
+Directly download [`docker-compose.yaml`](./docker-compose.yaml) and run:
+```bash
 docker compose up -d
+```
+Images are from Docker Hub: [`dqzboy/registry`](https://hub.docker.com/r/dqzboy/registry) (go-proxy) and [`dqzboy/hubcmd-ui`](https://hub.docker.com/r/dqzboy/hubcmd-ui) (management panel).
 
-# Start a specific service, for example the Docker Hub proxy
-docker compose up -d dockerhub
 
-# View logs
-docker logs -f [CONTAINER_ID_OR_NAME]
+### One-click deployment script
+The repository includes [`install/DockerProxy_Install.sh`](./install/DockerProxy_Install.sh), an interactive menu that completes "install dependencies → start go-proxy + hubcmdui → (optional) render Nginx/Caddy reverse proxy" in one click.
+
+Download and run:
+```bash
+curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh -o DockerProxy_Install.sh
+chmod +x DockerProxy_Install.sh
+./DockerProxy_Install.sh            # Enter the menu, choose 1) One-click deploy
 ```
 
-4. If you are not familiar with Nginx or Caddy, you can use any reverse proxy you prefer, or access services directly via IP and port.
+> The script automatically: checks and installs Docker / Docker Compose; generates a random `GO_PROXY_ADMIN_TOKEN` and writes it to `.env`; optionally deploys Nginx / Caddy reverse proxy.
 
-</div>
+After deployment, visit `http://<server-IP>:30080/admin` to manage proxies and server parameters from the web UI (you must register an admin account on first use; there is no built-in default account).
+
+### Config persistence & upgrades (Important)
+The config file is mounted on the host at the `./config/go-proxy/` directory (inside the container: `/app/config.d/config.yaml`).
+
+- On first start, if the host does not yet have a config file, the container automatically initializes one from the built-in default config — no manual creation needed.
+- To restore the default config: delete `./config/go-proxy/config.yaml` and recreate the container to re-seed it.
+
+
+### Usage tutorial
+<details>
+<summary><strong>Click to view</strong></summary>
+<div>
+
+[Usage tutorial](https://dqzboy.github.io/docs/pages/install.html#%E2%9C%A8-%E4%BD%BF%E7%94%A8)
+
 </details>
 
+---
 
-## ✨ Usage guide
-Full usage and configuration examples are available in the docs: https://dqzboy.github.io/docs/pages/install.html
+## 💻 Hubcmd-UI
 
-
-## 💻 HubCMD‑UI
-> HubCMD‑UI manual installation: hubcmdui/README.md
-
-> HubCMD-UI Manual Installation Guide：[点击查看教程](hubcmdui/README.md)
-
+> HubCMD-UI manual installation tutorial: [Click to view tutorial](hubcmdui/README.md)
 
 <br/>
 <table>
     <tr>
-      <td width="50%" align="center"><b>镜像加速</b></td>
-      <td width="50%" align="center"><b>镜像搜索</b></td>
+      <td width="50%" align="center"><b>Image Acceleration</b></td>
+      <td width="50%" align="center"><b>Image Search</b></td>
     </tr>
     <tr>
         <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_01.png?raw=true"></td>
         <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_02.png?raw=true"></td>
     </tr>
     <tr>
-      <td width="50%" align="center"><b>文档管理</b></td>
-      <td width="50%" align="center"><b>TAG搜索</b></td>
+      <td width="50%" align="center"><b>Document Management</b></td>
+      <td width="50%" align="center"><b>TAG Search</b></td>
     </tr>
     <tr>
         <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_03.png?raw=true"></td>
         <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_11.png?raw=true"></td>
     </tr>
     <tr>
-      <td width="50%" align="center"><b>控制面板</b></td>
-      <td width="50%" align="center"><b>容器管理</b></td>
+      <td width="50%" align="center"><b>Platform Configuration</b></td>
+      <td width="50%" align="center"><b>Proxy Management</b></td>
     </tr>
     <tr>
-        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_07.png?raw=true"></td>
-        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/dqzboy-proxy/hubcmd-ui_09.png?raw=true"></td>
+        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/picture/docker-proxy02.png?raw=true"></td>
+        <td width="50%" align="center"><img src="https://cdn.jsdelivr.net/gh/dqzboy/Images/picture/docker-proxy01.png?raw=true"></td>
     </tr>
 </table>
 
+---
 
 ## 💌 Promotion
 
 <table>
   <thead>
     <tr>
-      <th width="50%" align="center">描述信息</th>
-      <th width="50%" align="center">图文介绍</th>
+      <th width="50%" align="center">Description</th>
+      <th width="50%" align="center">Overview</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td width="50%" align="left">
-        <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">提供高性价比的海外VPS，支持多种操作系统，适合搭建Docker代理服务。</a>
+        <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">Provides cost-effective overseas VPS with support for multiple operating systems, suitable for building Docker proxy services.</a>
       </td>
       <td width="50%" align="center">
         <a href="https://dqzboy.github.io/proxyui/racknerd" target="_blank">
@@ -218,7 +153,7 @@ Full usage and configuration examples are available in the docs: https://dqzboy.
     </tr>
     <tr>
       <td width="50%" align="left">
-        <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">CloudCone 提供灵活的云服务器方案，支持按需付费，适合个人和企业用户。</a>
+        <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">CloudCone provides flexible cloud server plans with pay-as-you-go billing, suitable for both individual and enterprise users.</a>
       </td>
       <td width="50%" align="center">
         <a href="https://dqzboy.github.io/proxyui/CloudCone" target="_blank">
@@ -230,24 +165,20 @@ Full usage and configuration examples are available in the docs: https://dqzboy.
 </table>
 
 ##### *Telegram Bot: [Click to contact](https://t.me/RelayHubBot) ｜ E-Mail: support@dqzboy.com*
-**Only merchants with long-term stable operations and a solid reputation are accepted.*
-
+**We only accept merchants with long-term stable operations and good reputation.**
 
 ## 🤝 Contributing
+
 Thanks to everyone who has contributed!
 
 <a href="https://github.com/dqzboy/Docker-Proxy/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=dqzboy/Docker-Proxy" />
 </a>
 
-
 ## ❤ Acknowledgements
-This project builds on the work of several open‑source projects including:
+Thanks to the following projects for their open-source contributions:
 
-[CNCF Distribution](https://distribution.github.io/distribution/) 
-
-[docker-registry-browser](https://github.com/klausmeyer/docker-registry-browser)
-
+The project references the registry proxy design ideas of [CNCF Distribution](https://distribution.github.io/distribution/).
 
 ## License
 Docker-Proxy is available under the [Apache 2 license](./LICENSE)

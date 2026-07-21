@@ -25,8 +25,8 @@ router.post('/login', async (req, res) => {
     try {
         const { username, password, captcha } = req.body;
         
-        // 验证码检查
-        if (!req.session.captcha || req.session.captcha !== captcha) {
+        // 验证码检查（类型无关比较，兼容数字/字符串）
+        if (!req.session.captcha || String(req.session.captcha).trim() !== String(captcha).trim()) {
             return res.status(401).json({ error: '验证码错误' });
         }
         

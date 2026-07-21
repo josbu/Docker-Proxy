@@ -1,21 +1,7 @@
-# ============================================================
-#  使用： docker compose -f docker-compose-build.yaml up -d
-#  适用：已克隆仓库、需要本地构建 go-proxy / hubcmdui 镜像的场景。
-#        仅需拉取现成镜像请改用 docker-compose.yaml
-# ============================================================
-#
-# 端口说明：
-#   - go-proxy  容器内部 :5000，对主机发布为 50000
-#              nginx / caddy 把各注册表子域反代到 localhost:50000）
-#   - go-proxy  :5001  管理 API 端口（仅 docker 内部可达，host 不映射，不对外暴露）
-#   - hubcmd-ui :30080 网页管理面板（访问 http://<服务器IP>:30080/admin 进行管理）
-
 services:
   go-proxy:
+    image: ${REGISTRY_IMAGE:-dqzboy/registry:latest}
     container_name: reg-go-proxy
-    build:
-      context: ./go-proxy
-      dockerfile: Dockerfile
     restart: always
     environment:
       - OTEL_TRACES_EXPORTER=none
@@ -23,8 +9,8 @@ services:
       # 如需通过本地代理访问上游，可设置：
       # - HTTP_PROXY=http://host:port
       # - HTTPS_PROXY=http://host:port
+    # 配置持久化：挂载宿主机目录，容器内配置写在 /app/config.d/config.yaml。
     volumes:
-      # 配置持久化：宿主机目录挂载，容器内配置在 /app/config.d/config.yaml
       - ./config/go-proxy:/app/config.d
     ports:
       - 50000:5000
@@ -32,10 +18,8 @@ services:
       - registry-net
 
   hubcmd-ui:
+    image: ${UI_IMAGE:-dqzboy/hubcmd-ui:latest}
     container_name: hubcmd-ui
-    build:
-      context: ./hubcmdui
-      dockerfile: Dockerfile
     restart: always
     depends_on:
       - go-proxy
@@ -50,8 +34,8 @@ services:
       # - NO_PROXY=localhost,127.0.0.1,.local
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # SQLite 数据库文件
-      - ./hubcmdui/data:/app/data
+      # SQLite 数据库文件（命名卷，无需本地目录）
+      - hubcmd-ui-data:/app/data
     ports:
       - 30080:3000
     networks:
@@ -59,3 +43,6 @@ services:
 
 networks:
   registry-net:
+
+volumes:
+  hubcmd-ui-data:

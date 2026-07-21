@@ -1221,3 +1221,56 @@
         padding-right: 16px;
     }
 }
+
+/* ===== 代理管理（Go 纯代理） ===== */
+.go-proxy-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.go-proxy-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem 1.5rem;
+}
+
+.go-proxy-settings-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.go-proxy-add-btn {
+    margin-left: auto;
+}
+
+.go-proxy-modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1.25rem;
+}
+
+.gp-insecure-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.gp-insecure-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .go-proxy-modal-grid {
+        grid-template-columns: 1fr;
+    }
+    .go-proxy-header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+}

@@ -1,0 +1,125 @@
+hub.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host docker.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+ghcr.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host ghcr.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+gcr.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host gcr.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+k8s-gcr.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host k8s.gcr.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+k8s.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host registry.k8s.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+quay.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host quay.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+mcr.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host mcr.microsoft.com
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+elastic.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host docker.elastic.co
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}
+
+nvcr.your_domain_name {
+    # 拒绝访问 Go 代理管理 API（/-/ 路径）；管理端口仅内网 5001 提供，此处二次防护
+    @admin path /-/*
+    respond @admin 404
+
+    reverse_proxy localhost:50000 {
+        header_up Host nvcr.io
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Real-IP {remote_addr}
+        header_up X-Forwarded-For {remote_addr}
+    }
+}

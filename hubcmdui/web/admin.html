@@ -4621,6 +4621,9 @@
                 <li data-section="docker-monitoring">
                     <i class="fas fa-chart-line"></i>容器监控
                 </li>
+                <li data-section="go-proxy">
+                    <i class="fas fa-server"></i>代理管理
+                </li>
                 <li data-section="user-center">
                     <i class="fas fa-user-cog"></i>用户中心
                 </li>
@@ -4963,6 +4966,102 @@
                     <div id="messageContainer"></div>
                 </div>
 
+                <!-- 代理管理（Go 纯代理） -->
+                <div id="go-proxy" class="content-section">
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <h1 class="page-title"><i class="fas fa-server"></i> 代理管理</h1>
+                            <p class="page-subtitle">在线管理镜像代理（注册表）与服务器设置，无需手动编辑配置文件</p>
+                        </div>
+                        <div class="go-proxy-header-actions">
+                            <button class="btn btn-outline-secondary btn-with-icon" id="gp-refresh-btn">
+                                <i class="fas fa-sync-alt"></i> 刷新
+                            </button>
+                            <button class="btn btn-warning btn-with-icon" id="gp-reload-btn">
+                                <i class="fas fa-redo"></i> 重新加载
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 服务器设置 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-card-icon blue">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <div class="config-card-title">
+                                <h3>服务器设置</h3>
+                                <p>配置代理监听地址、超时参数与默认注册表</p>
+                            </div>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="go-proxy-settings-grid">
+                                <div class="modern-form-group">
+                                    <label for="gp-listen"><i class="fas fa-network-wired"></i> 监听地址</label>
+                                    <input type="text" id="gp-listen" class="modern-input" placeholder=":5000">
+                                    <span class="input-hint">代理对外提供服务的地址，例如 :5000</span>
+                                </div>
+                                <div class="modern-form-group">
+                                    <label for="gp-default"><i class="fas fa-star"></i> 默认注册表</label>
+                                    <select id="gp-default" class="modern-input"></select>
+                                    <span class="input-hint">未匹配到具体域名时使用的注册表</span>
+                                </div>
+                                <div class="modern-form-group">
+                                    <label for="gp-read-timeout"><i class="fas fa-hourglass-half"></i> 读取超时 (秒)</label>
+                                    <input type="number" id="gp-read-timeout" class="modern-input" min="0" value="60">
+                                </div>
+                                <div class="modern-form-group">
+                                    <label for="gp-write-timeout"><i class="fas fa-hourglass-end"></i> 写入超时 (秒)</label>
+                                    <input type="number" id="gp-write-timeout" class="modern-input" min="0" value="0">
+                                    <span class="input-hint">0 表示不限制</span>
+                                </div>
+                                <div class="modern-form-group">
+                                    <label for="gp-idle-timeout"><i class="fas fa-clock"></i> 空闲超时 (秒)</label>
+                                    <input type="number" id="gp-idle-timeout" class="modern-input" min="0" value="120">
+                                </div>
+                            </div>
+                            <div class="go-proxy-settings-actions">
+                                <button class="btn btn-primary btn-with-icon" id="gp-save-server-btn">
+                                    <i class="fas fa-save"></i> 保存服务器设置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 注册表代理列表 -->
+                    <div class="config-card">
+                        <div class="config-card-header">
+                            <div class="config-card-icon purple">
+                                <i class="fas fa-cubes"></i>
+                            </div>
+                            <div class="config-card-title">
+                                <h3>注册表代理</h3>
+                                <p>管理各个公共镜像仓库的代理规则</p>
+                            </div>
+                            <button class="btn btn-primary btn-with-icon go-proxy-add-btn" id="gp-add-btn">
+                                <i class="fas fa-plus"></i> 添加代理
+                            </button>
+                        </div>
+                        <div class="config-card-body">
+                            <div class="table-responsive">
+                                <table class="modern-table">
+                                    <thead>
+                                        <tr>
+                                            <th>名称</th>
+                                            <th>匹配域名 (Hosts)</th>
+                                            <th>上游地址 (Upstream)</th>
+                                            <th>认证方式</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="gp-registry-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 用户中心部分 -->
                 <div id="user-center" class="content-section">
                     <div class="user-center-header">
@@ -5214,6 +5313,76 @@
         </div>
     </div>
 
+    <!-- 代理管理：新增 / 编辑 弹窗 -->
+    <div class="modal fade" id="gpModal" tabindex="-1" aria-labelledby="gp-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gp-modal-title">添加代理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="modern-form-group">
+                        <label for="gp-name"><i class="fas fa-tag"></i> 代理名称</label>
+                        <input type="text" id="gp-name" class="modern-input" placeholder="例如 dockerhub、ghcr">
+                        <span class="input-hint">唯一标识，用于区分不同代理</span>
+                    </div>
+                    <div class="modern-form-group">
+                        <label for="gp-hosts"><i class="fas fa-globe"></i> 匹配域名 (Hosts)</label>
+                        <input type="text" id="gp-hosts" class="modern-input" placeholder="registry-1.docker.io, docker.io">
+                        <span class="input-hint">多个域名用逗号分隔；客户端拉取这些域名时走此代理</span>
+                    </div>
+                    <div class="modern-form-group">
+                        <label for="gp-upstream"><i class="fas fa-link"></i> 上游地址 (Upstream)</label>
+                        <input type="text" id="gp-upstream" class="modern-input" placeholder="https://registry-1.docker.io">
+                        <span class="input-hint">真实镜像仓库地址，必须是 http(s):// 开头</span>
+                    </div>
+                    <div class="go-proxy-modal-grid">
+                        <div class="modern-form-group">
+                            <label for="gp-auth-type"><i class="fas fa-shield-alt"></i> 认证方式</label>
+                            <select id="gp-auth-type" class="modern-input">
+                                <option value="token">Token（Bearer，默认）</option>
+                                <option value="basic">Basic（用户名/密码）</option>
+                                <option value="none">无认证</option>
+                            </select>
+                        </div>
+                        <div class="modern-form-group">
+                            <label for="gp-ttl"><i class="fas fa-clock"></i> Token 缓存 (秒)</label>
+                            <input type="number" id="gp-ttl" class="modern-input" min="0" value="3600">
+                            <span class="input-hint">0 表示不缓存</span>
+                        </div>
+                    </div>
+                    <div class="go-proxy-modal-grid">
+                        <div class="modern-form-group">
+                            <label for="gp-username"><i class="fas fa-user"></i> 用户名</label>
+                            <input type="text" id="gp-username" class="modern-input" placeholder="Basic 认证用户名（可选）">
+                        </div>
+                        <div class="modern-form-group">
+                            <label for="gp-password"><i class="fas fa-key"></i> 密码</label>
+                            <input type="password" id="gp-password" class="modern-input" placeholder="Basic 认证密码（可选）">
+                        </div>
+                    </div>
+                    <div class="modern-form-group">
+                        <label class="gp-insecure-label">
+                            <input type="checkbox" id="gp-insecure"> 跳过 TLS 证书校验 (insecure_skip_verify)
+                        </label>
+                        <span class="input-hint" id="gp-pwd-hint" style="display:none; color:#d97706;">
+                            <i class="fas fa-info-circle"></i> 编辑模式下留空密码表示保留原有密码，不修改。
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-with-icon" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-primary btn-with-icon" id="gp-save-btn">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -5233,6 +5402,7 @@
     <script src="js/systemStatus.js"></script>
     <script src="js/dockerManager.js"></script>
     <script src="js/networkTest.js"></script>
+    <script src="js/goProxyManager.js"></script>
     <script src="js/app.js"></script>
 
     <script>
