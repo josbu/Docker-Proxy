@@ -62,17 +62,26 @@
 ```bash
 docker compose up -d
 ```
-镜像来自 Docker Hub：[`dqzboy/registry`](https://hub.docker.com/r/dqzboy/registry)（go-proxy）与 [`dqzboy/hubcmd-ui`](https://hub.docker.com/r/dqzboy/hubcmd-ui)（管理面板）。
+镜像来自 Docker Hub：[`dqzboy/registry`](https://hub.docker.com/r/dqzboy/registry)（Docker 镜像加速，go-proxy）与 [`dqzboy/hubcmd-ui`](https://hub.docker.com/r/dqzboy/hubcmd-ui)（管理面板）。
 
 
 ### 一键部署脚本
-仓库内置 [`install/DockerProxy_Install.sh`](./install/DockerProxy_Install.sh)，交互式菜单一键完成「安装依赖 → 启动 go-proxy + hubcmdui →（可选）渲染 Nginx/Caddy 反代」。
+仓库内置 [`install/DockerProxy_Install.sh`](./install/DockerProxy_Install.sh)，交互式菜单一键完成「安装依赖 → 启动 Docker 镜像加速 (go-proxy + hubcmd-ui) →（可选）渲染 Nginx/Caddy 反代」。
 
-下载并运行：
-```bash
-curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh -o DockerProxy_Install.sh
-chmod +x DockerProxy_Install.sh
-./DockerProxy_Install.sh            # 进入菜单，选 1) 一键部署
+```shell
+# CentOS && RHEL && Rocky
+yum -y install curl
+# ubuntu && debian
+apt -y install curl
+
+# 国外环境
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh)"
+
+# 国内环境cdn加速地址
+bash -c "$(curl -fsSL https://cdn.jsdelivr.net/gh/dqzboy/Docker-Proxy/install/DockerProxy_Install.sh)"
+
+# 国内Github代理地址
+bash -c "$(curl -fsSL https://ghp.ci/https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh)"
 ```
 
 > 脚本会自动：检查并安装 Docker / Docker Compose；生成随机 `GO_PROXY_ADMIN_TOKEN` 写入 `.env`；可选部署 Nginx / Caddy 反代。

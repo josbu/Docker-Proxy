@@ -62,17 +62,19 @@ Directly download [`docker-compose.yaml`](./docker-compose.yaml) and run:
 ```bash
 docker compose up -d
 ```
-Images are from Docker Hub: [`dqzboy/registry`](https://hub.docker.com/r/dqzboy/registry) (go-proxy) and [`dqzboy/hubcmd-ui`](https://hub.docker.com/r/dqzboy/hubcmd-ui) (management panel).
+Images are from Docker Hub: [`dqzboy/registry`](https://hub.docker.com/r/dqzboy/registry) (Docker image acceleration, go-proxy) and [`dqzboy/hubcmd-ui`](https://hub.docker.com/r/dqzboy/hubcmd-ui) (management panel).
 
 
 ### One-click deployment script
-The repository includes [`install/DockerProxy_Install.sh`](./install/DockerProxy_Install.sh), an interactive menu that completes "install dependencies → start go-proxy + hubcmdui → (optional) render Nginx/Caddy reverse proxy" in one click.
+The repository includes [`install/DockerProxy_Install.sh`](./install/DockerProxy_Install.sh), an interactive menu that completes "install dependencies → start Docker image acceleration (go-proxy + hubcmd-ui) → (optional) render Nginx/Caddy reverse proxy" in one click.
 
-Download and run:
-```bash
-curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh -o DockerProxy_Install.sh
-chmod +x DockerProxy_Install.sh
-./DockerProxy_Install.sh            # Enter the menu, choose 1) One-click deploy
+```shell
+# CentOS && RHEL && Rocky
+yum -y install curl
+# ubuntu && debian
+apt -y install curl
+
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/dqzboy/Docker-Proxy/main/install/DockerProxy_Install.sh)"
 ```
 
 > The script automatically: checks and installs Docker / Docker Compose; generates a random `GO_PROXY_ADMIN_TOKEN` and writes it to `.env`; optionally deploys Nginx / Caddy reverse proxy.
