@@ -232,7 +232,7 @@ class Database {
           'INSERT INTO users (username, password, created_at, login_count, last_login) VALUES (?, ?, ?, ?, ?)',
           ['root', hashedPassword, new Date().toISOString(), 0, null]
         );
-        logger.info('默认管理员用户创建成功: root/admin@123');
+        logger.info('默认管理员用户创建成功，请及时修改默认密码');
       }
     } catch (error) {
       logger.error('创建默认管理员用户失败:', error);
