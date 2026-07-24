@@ -1650,6 +1650,10 @@ else
 # Docker 镜像加速管理 API 令牌 (请妥善保管, 切勿泄露)
 GO_PROXY_ADMIN_TOKEN=$token
 
+# 真实宿主机名（仪表盘「主机」展示用）。默认取安装时宿主机的 hostname，
+# 如需修改可手动改成任意名称后重新 up -d。
+HOST_NAME=$(hostname)
+
 # 镜像地址 (可选覆盖, 等号右侧为默认值)
 # 若构建时未选择 latest 标签, 请在此显式指定对应标签, 否则默认拉取 :latest 会失败
 REGISTRY_IMAGE=dqzboy/registry:latest

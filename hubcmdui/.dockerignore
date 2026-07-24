@@ -1,11 +1,27 @@
+# 构建产物：由 Dockerfile 第一阶段重新生成，不应从宿主机带入镜像
+web/dist
+web/dist/**
+
+# 依赖：由 Dockerfile 重新安装
 node_modules
 src/node_modules
-# 前端构建产物：镜像内由构建阶段产出，禁止从本地上下文带入（避免覆盖/陈旧）
-web/dist
+
+# 运行时数据（SQLite、日志等）
 data
-.git
+data/**
+*.db
+*.db-journal
 *.log
-npm-debug.log
-Dockerfile
-.dockerignore
+
+# 版本控制
+.git
+.gitignore
+
+# 开发/IDE
+.idea
+.vscode
 .DS_Store
+.workbuddy
+
+# 文档与不参与构建的文件
+README*.md

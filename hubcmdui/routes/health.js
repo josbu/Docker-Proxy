@@ -25,7 +25,7 @@ router.get('/system', (req, res) => {
             system: {
                 platform: os.platform(),
                 release: os.release(),
-                hostname: os.hostname(),
+                hostname: process.env.HOST_NAME || os.hostname(),
                 uptime: os.uptime(),
                 totalMem: os.totalmem(),
                 freeMem: os.freemem(),

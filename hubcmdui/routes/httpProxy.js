@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../logger');
 const { requireLogin } = require('../middleware/auth');
+const { isRestrictedHostDeep } = require('../utils/ssrf');
 const httpProxyService = require('../services/httpProxyService');
 
 // 获取代理状态
@@ -123,35 +124,36 @@ router.get('/proxy/config', requireLogin, async (req, res) => {
   }
 });
 
-// 验证URL是否为允许的外部地址（防止SSRF）
-function isAllowedUrl(urlString) {
-  try {
-    const parsed = new URL(urlString);
-    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
-    const hostname = parsed.hostname.toLowerCase();
-    // Block private/internal addresses
-    if (/^(localhost|127\.|0\.0\.0\.0|::1$)/.test(hostname)) return false;
-    if (/^10\./.test(hostname)) return false;
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
-    if (/^192\.168\./.test(hostname)) return false;
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 // 测试代理连接
 router.post('/proxy/test', requireLogin, async (req, res) => {
   try {
-    const { testUrl = 'http://httpbin.org/ip' } = req.body;
-    if (!isAllowedUrl(testUrl)) {
-      return res.status(400).json({ error: '无效或不允许的测试URL' });
-    }
     const axios = require('axios');
     const status = httpProxyService.getStatus();
-    
+
     if (!status.isRunning) {
       return res.status(400).json({ error: '代理服务未运行' });
+    }
+
+    // 校验用户提供的 testUrl，防止 SSRF：
+    //  - 仅允许 http/https 协议
+    //  - 解析后的主机不得为内网/保留地址（含对域名做 DNS 解析后的结果）
+    const rawUrl = req.body ? req.body.testUrl : undefined;
+    let testUrl = 'http://httpbin.org/ip';
+    if (rawUrl) {
+      let parsed;
+      try {
+        parsed = new URL(rawUrl);
+      } catch (e) {
+        return res.status(400).json({ error: 'testUrl 不是合法的 URL' });
+      }
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return res.status(400).json({ error: '仅支持 http/https 协议的 testUrl' });
+      }
+      if (await isRestrictedHostDeep(parsed.hostname)) {
+        logger.warn('SSRF 拦截(/proxy/test): 拒绝内网/保留地址 ' + parsed.hostname);
+        return res.status(400).json({ error: 'testUrl 指向内网或保留地址，已禁止' });
+      }
+      testUrl = rawUrl;
     }
 
     // 通过代理测试连接

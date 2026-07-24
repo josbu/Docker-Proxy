@@ -179,7 +179,8 @@ async function getSystemResources() {
       system: {
         platform: osInfo.platform,
         release: osInfo.release,
-        hostname: osInfo.hostname || os.hostname(),
+        // Docker 中 osInfo.hostname 默认是容器 ID，优先使用部署时传入的 HOST_NAME 环境变量
+        hostname: process.env.HOST_NAME || osInfo.hostname || os.hostname(),
         uptime: Math.floor(os.uptime())   // 秒（数字），由前端 formatUptime 格式化
       }
     };

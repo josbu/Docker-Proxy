@@ -15,12 +15,33 @@
       <!-- KPI：CPU / 内存 / 磁盘 -->
       <div class="dash-card cell-kpi">
         <RingStat :value="cpuVal" :label="'CPU ' + t('dashboard.load')" :sub="cpuSub" :accent="colors.cpu" :accent2="colors.cpu2" :icon="Cpu" />
+        <div class="kpi-footer">
+          <div class="kpi-foot-hd">
+            <span class="kpi-foot-lab">{{ t('dashboard.miniTrend') }}</span>
+            <span class="kpi-foot-stat" :style="{ color: colors.cpu }">{{ t('dashboard.load1m') }} {{ cpuLoad1m }}</span>
+          </div>
+          <Sparkline :data="history.slice(-60).map(p => p.cpu)" :color="colors.cpu" :height="34" />
+        </div>
       </div>
       <div class="dash-card cell-kpi">
         <RingStat :value="memVal" :center-value="memCenter" unit="GB" :label="t('dashboard.memUsage')" :sub="memSub" :accent="colors.mem" :accent2="colors.mem2" :icon="Monitor" />
+        <div class="kpi-footer">
+          <div class="kpi-foot-hd">
+            <span class="kpi-foot-lab">{{ t('dashboard.miniTrend') }}</span>
+            <span class="kpi-foot-stat" :style="{ color: colors.mem }">{{ t('dashboard.available') }} {{ fmtGB(memAvailGb) }} GB</span>
+          </div>
+          <Sparkline :data="history.slice(-60).map(p => p.mem)" :color="colors.mem" :height="34" />
+        </div>
       </div>
       <div class="dash-card cell-kpi">
         <RingStat :value="diskVal" :center-value="diskCenter" unit="GB" :label="t('dashboard.diskUsage')" :sub="diskSub" :accent="colors.disk" :accent2="colors.disk2" :icon="Files" />
+        <div class="kpi-footer">
+          <div class="kpi-foot-hd">
+            <span class="kpi-foot-lab">{{ t('dashboard.miniTrend') }}</span>
+            <span class="kpi-foot-stat" :style="{ color: colors.disk }">{{ t('dashboard.available') }} {{ fmtGB(diskAvailGb) }} GB</span>
+          </div>
+          <Sparkline :data="history.slice(-60).map(p => p.disk)" :color="colors.disk" :height="34" />
+        </div>
       </div>
 
       <!-- Docker 状态 -->
@@ -82,6 +103,18 @@
             <span class="net-val">{{ netTxDisplay.value }} <i class="net-unit">{{ netTxDisplay.unit }}</i></span>
           </div>
         </div>
+        <div class="net-footer">
+          <div class="net-foot-hd">
+            <span class="net-foot-lab">{{ t('dashboard.miniTrend') }}</span>
+            <span class="net-foot-stat down">{{ t('dashboard.netPeakDown') }} {{ netRxPeakDisplay.value }} {{ netRxPeakDisplay.unit }}</span>
+          </div>
+          <Sparkline :data="history.slice(-60).map(p => p.netRx)" color="#10b981" :height="28" />
+          <div class="net-foot-hd" style="margin-top: 8px;">
+            <span class="net-foot-lab"></span>
+            <span class="net-foot-stat up">{{ t('dashboard.netPeakUp') }} {{ netTxPeakDisplay.value }} {{ netTxPeakDisplay.unit }}</span>
+          </div>
+          <Sparkline :data="history.slice(-60).map(p => p.netTx)" color="#f97316" :height="28" />
+        </div>
       </div>
 
       <!-- 容器列表 -->
@@ -115,6 +148,7 @@ import { ElMessage } from 'element-plus'
 import { Box, Monitor, Cpu, Files, Refresh, DataLine, PieChart, List, Connection } from '@element-plus/icons-vue'
 import RingStat from '../components/RingStat.vue'
 import EChart from '../components/EChart.vue'
+import Sparkline from '../components/Sparkline.vue'
 import { useThemeColors } from '../composables/useThemeColors'
 import { getSystemResources, getDockerStatus, getMetricsHistory } from '../services'
 
@@ -131,6 +165,9 @@ const diskVal = ref(0)
 const cpuSub = ref('—')
 const memSub = ref('—')
 const diskSub = ref('—')
+const cpuLoad1m = ref('—')
+const memAvailGb = ref(null)
+const diskAvailGb = ref(null)
 const netRx = ref(0) // bytes/sec
 const netTx = ref(0) // bytes/sec
 const hostName = ref('—')
@@ -147,11 +184,11 @@ const diskCenter = ref(0)
 
 // 趋势历史：内存中保留全部（最长 24h），并节流持久化到 localStorage（分钟级降采样）。
 // 这样刷新页面 / 重开浏览器后，仍能恢复近 24 小时的曲线，而不是每次都从零开始累积。
-const TREND_KEY = 'hubcmdui.trend.v1'
+const TREND_KEY = 'hubcmdui.trend.v2'
 const TREND_WINDOW = 24 * 3600 * 1000 // 保留 24 小时
 const PERSIST_INTERVAL = 60 * 1000    // 至少每 60 秒落盘一次
 const SAMPLE_STEP = 60 * 1000         // 落盘时按 60 秒降采样，控制 localStorage 体积
-const history = ref([])               // 每项为 { ts, cpu, mem, disk }
+const history = ref([])               // 每项为 { ts, cpu, mem, disk, netRx, netTx }
 let lastPersistTs = 0
 // 历史数据来源：'server' = 后端统一落库；'local' = 浏览器本地兜底；'none' = 无数据
 const historySource = ref('none')
@@ -228,9 +265,22 @@ function formatSpeed(bps) {
 const netRxDisplay = computed(() => formatSpeed(netRx.value))
 const netTxDisplay = computed(() => formatSpeed(netTx.value))
 
-function pushHistory(cpu, mem, disk) {
+// 近 60 个采样点（约 5 分钟）的峰值，用于网络流量卡片底部填充
+const netRxPeak = computed(() => Math.max(0, ...history.value.slice(-60).map(p => p.netRx || 0)))
+const netTxPeak = computed(() => Math.max(0, ...history.value.slice(-60).map(p => p.netTx || 0)))
+const netRxPeakDisplay = computed(() => formatSpeed(netRxPeak.value))
+const netTxPeakDisplay = computed(() => formatSpeed(netTxPeak.value))
+
+function pushHistory(cpu, mem, disk, rx, tx) {
   const now = Date.now()
-  history.value.push({ ts: now, cpu: numOrNull(cpu), mem: numOrNull(mem), disk: numOrNull(disk) })
+  history.value.push({
+    ts: now,
+    cpu: numOrNull(cpu),
+    mem: numOrNull(mem),
+    disk: numOrNull(disk),
+    netRx: numOrNull(rx),
+    netTx: numOrNull(tx)
+  })
   // 丢弃超过 24 小时的旧点
   const cut = now - TREND_WINDOW
   while (history.value.length && history.value[0].ts < cut) history.value.shift()
@@ -295,6 +345,11 @@ async function refresh() {
       diskCenter.value = diskUsedGb ?? 0
       diskSub.value = `${fmtGB(diskUsedGb)} / ${fmtGB(diskTotalGb)} GB`
 
+      // KPI 卡片底部副指标（填充卡片底部空白）
+      cpuLoad1m.value = cpu.loadAvg ? cpu.loadAvg[0].toFixed(2) : (cpu.load1 ?? '—')
+      memAvailGb.value = toGB(mem.available)
+      diskAvailGb.value = toGB(disk.available) ?? (diskTotalGb - diskUsedGb)
+
       // 网络吞吐（systeminformation 实测 rx/tx，单位 bytes/sec，前端自适应单位展示）
       const net = r.network || {}
       netRx.value = net.rxSec || 0
@@ -302,7 +357,7 @@ async function refresh() {
 
       hostName.value = sys.hostname || r.hostname || '—'
       upTime.value = formatUptime(typeof r.uptime === 'number' ? r.uptime : (sys.uptime || 0))
-      pushHistory(cpuVal.value, memVal.value, diskVal.value)
+      pushHistory(cpuVal.value, memVal.value, diskVal.value, netRx.value, netTx.value)
     })().catch(e => {
       ElMessage.error(t('dashboard.fetchSysFailed') + (e.response?.data?.error || e.message))
     }),
@@ -457,7 +512,14 @@ onMounted(async () => {
     const data = await getMetricsHistory(24)
     const pts = data && Array.isArray(data.points) ? data.points : []
     if (pts.length) {
-      history.value = pts.map(p => ({ ts: p.ts, cpu: p.cpu, mem: p.memory, disk: p.disk }))
+      history.value = pts.map(p => ({
+        ts: p.ts,
+        cpu: p.cpu,
+        mem: p.memory,
+        disk: p.disk,
+        netRx: p.netRx ?? null,
+        netTx: p.netTx ?? null
+      }))
       historySource.value = 'server'
     } else {
       history.value = loadHistory()
@@ -528,6 +590,13 @@ function formatUptime(seconds) {
 }
 .dash-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--border-strong); }
 
+/* KPI 卡片：内容顶部对齐，底部用趋势图+副指标填满 */
+.cell-kpi.dash-card { display: flex; flex-direction: column; }
+.kpi-footer { margin-top: auto; padding-top: 14px; }
+.kpi-foot-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.kpi-foot-lab { font-size: 12px; color: var(--muted); }
+.kpi-foot-stat { font-size: 12px; font-weight: 600; }
+
 .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .card-title { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 600; color: var(--fg); }
 .card-title .el-icon { color: var(--accent); }
@@ -577,6 +646,15 @@ function formatUptime(seconds) {
 .net-lab { font-size: 13px; color: var(--muted); }
 .net-val { margin-left: auto; font-size: 17px; font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; }
 .net-unit { font-size: 11px; font-weight: 600; color: var(--muted); font-style: normal; margin-left: 2px; }
+
+/* 网络流量卡：底部用双趋势图+峰值填满空白 */
+.cell-net.dash-card { display: flex; flex-direction: column; }
+.net-footer { margin-top: auto; padding-top: 14px; }
+.net-foot-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.net-foot-lab { font-size: 12px; color: var(--muted); }
+.net-foot-stat { font-size: 12px; font-weight: 600; }
+.net-foot-stat.down { color: #10b981; }
+.net-foot-stat.up { color: #f97316; }
 
 @media (max-width: 1100px) {
   .cell-kpi, .cell-docker { grid-column: span 6; }

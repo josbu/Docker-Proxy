@@ -16,8 +16,8 @@ export default defineConfig({
   },
   build: {
     outDir: '../web/dist',
-    // 关闭自动清空输出目录：避免 Vite 在构建前批量删除 web/dist/assets 触发安全删除保护。
-    // 构建产物为内容哈希命名，旧 chunk 不被 index.html 引用即无效，可忽略或定期清理。
-    emptyOutDir: false
+    // 每次构建前清空输出目录，避免旧的 hash chunk 在 Docker 镜像里残留膨胀。
+    // publicDir 中的静态资源（src/public/images）仍会被自动复制回 web/dist/images。
+    emptyOutDir: true
   }
 })

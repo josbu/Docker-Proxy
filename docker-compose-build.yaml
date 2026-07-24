@@ -35,6 +35,8 @@ services:
       # 指向 go-proxy 的管理端口
       - GO_PROXY_ADMIN_URL=http://go-proxy:5001
       - GO_PROXY_ADMIN_TOKEN=${GO_PROXY_ADMIN_TOKEN:-change-me-to-a-strong-random-token}
+      # 真实宿主机名
+      - HOST_NAME=${HOST_NAME:-}
       - SECURE_COOKIE=false
       # HTTP代理配置（按需开启）
       # - HTTP_PROXY=http://proxy.example.com:8080

@@ -89,7 +89,9 @@ async function getSystemInfo() {
     
     return {
       platform,
-      hostname: os.hostname(),
+      // 优先使用部署时通过环境变量 HOST_NAME 传入的真实宿主机名；
+      // 未设置时回退到 os.hostname()，在 Docker 中默认是容器 ID。
+      hostname: process.env.HOST_NAME || os.hostname(),
       memory: memoryInfo,
       cpu: cpuInfo,
       disk: diskInfo,

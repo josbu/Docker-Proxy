@@ -69,22 +69,20 @@
         </div>
 
         <el-form label-position="top" class="mon-form">
-          <el-form-item v-if="form.notificationType === 'wechat'" label="Webhook">
+          <el-form-item v-show="form.notificationType === 'wechat'" label="Webhook">
             <el-input v-model="form.webhookUrl" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
               <template #prefix><el-icon><Link /></el-icon></template>
             </el-input>
             <div class="field-hint">{{ t('monitoring.wechatHint') }}</div>
           </el-form-item>
-          <template v-else>
-            <el-form-item label="Bot Token">
-              <el-input v-model="form.telegramToken" placeholder="123456:ABC-DEF1234..." />
-              <div class="field-hint">{{ t('monitoring.telegramTokenHint') }}</div>
-            </el-form-item>
-            <el-form-item label="Chat ID">
-              <el-input v-model="form.telegramChatId" :placeholder="t('monitoring.chatIdPlaceholder')" />
-              <div class="field-hint">{{ t('monitoring.telegramChatIdHint') }}</div>
-            </el-form-item>
-          </template>
+          <el-form-item v-show="form.notificationType === 'telegram'" label="Bot Token">
+            <el-input v-model="form.telegramToken" placeholder="123456:ABC-DEF1234..." />
+            <div class="field-hint">{{ t('monitoring.telegramTokenHint') }}</div>
+          </el-form-item>
+          <el-form-item v-show="form.notificationType === 'telegram'" label="Chat ID">
+            <el-input v-model="form.telegramChatId" :placeholder="t('monitoring.chatIdPlaceholder')" />
+            <div class="field-hint">{{ t('monitoring.telegramChatIdHint') }}</div>
+          </el-form-item>
         </el-form>
       </el-card>
 

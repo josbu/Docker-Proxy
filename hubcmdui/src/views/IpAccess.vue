@@ -18,25 +18,27 @@
           size="large"
           class="status-tag"
         >
-          <el-icon class="status-tag__icon"><component :is="statusTagIcon" /></el-icon>
-          {{ statusTagLabel }}
+          <span class="status-tag__inner">
+            <el-icon class="status-tag__icon"><component :is="statusTagIcon" /></el-icon>
+            <span>{{ statusTagLabel }}</span>
+          </span>
         </el-tag>
         <el-button
-          :icon="Refresh"
           :loading="loading"
           class="head-btn"
           @click="load"
         >
-          {{ t('common.refresh') }}
+          <el-icon><Refresh /></el-icon>
+          <span>{{ t('common.refresh') }}</span>
         </el-button>
         <el-button
           type="primary"
-          :icon="Document"
           :loading="saving"
           class="head-btn head-btn--primary"
           @click="onSave"
         >
-          {{ t('common.save') }}
+          <el-icon><Document /></el-icon>
+          <span>{{ t('common.save') }}</span>
         </el-button>
       </div>
     </header>
@@ -346,15 +348,35 @@ onMounted(load)
   padding: 0 12px;
   height: 34px;
 }
+.status-tag__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1;
+}
 .status-tag__icon {
-  margin-right: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
+  line-height: 1;
 }
 .head-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
   font-weight: 500;
+}
+.head-btn .el-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  line-height: 1;
+  vertical-align: middle;
+}
+.head-btn > span {
+  line-height: 1;
 }
 .head-btn--primary {
   box-shadow: 0 4px 14px rgba(59, 130, 246, .35);

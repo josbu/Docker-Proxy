@@ -7,6 +7,7 @@ const url = require('url');
 const net = require('net');
 const logger = require('../logger');
 const configServiceDB = require('./configServiceDB');
+const { isRestrictedHost } = require('../utils/ssrf');
 
 class HttpProxyService {
   constructor() {
@@ -112,6 +113,13 @@ class HttpProxyService {
         return;
       }
 
+      // SSRF 防护：拒绝目标为内网/保留地址（如 169.254.169.254、localhost、192.168.x）
+      if (isRestrictedHost(parsedUrl.hostname)) {
+        logger.warn('SSRF 拦截(HTTP): 拒绝访问内网/保留地址 ' + parsedUrl.hostname);
+        this.sendForbidden(clientRes, '目标地址为内网或保留地址，已禁止');
+        return;
+      }
+
       // 创建目标请求选项
       const options = {
         hostname: parsedUrl.hostname,
@@ -185,6 +193,14 @@ class HttpProxyService {
       }
 
       if (this.isHostBlocked(hostname)) {
+        clientSocket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+        clientSocket.end();
+        return;
+      }
+
+      // SSRF 防护：拒绝目标为内网/保留地址（如 169.254.169.254、localhost、192.168.x）
+      if (isRestrictedHost(hostname)) {
+        logger.warn('SSRF 拦截(CONNECT): 拒绝访问内网/保留地址 ' + hostname);
         clientSocket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
         clientSocket.end();
         return;
