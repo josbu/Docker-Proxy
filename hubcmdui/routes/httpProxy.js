@@ -123,10 +123,30 @@ router.get('/proxy/config', requireLogin, async (req, res) => {
   }
 });
 
+// 验证URL是否为允许的外部地址（防止SSRF）
+function isAllowedUrl(urlString) {
+  try {
+    const parsed = new URL(urlString);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    const hostname = parsed.hostname.toLowerCase();
+    // Block private/internal addresses
+    if (/^(localhost|127\.|0\.0\.0\.0|::1$)/.test(hostname)) return false;
+    if (/^10\./.test(hostname)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (/^192\.168\./.test(hostname)) return false;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // 测试代理连接
 router.post('/proxy/test', requireLogin, async (req, res) => {
   try {
     const { testUrl = 'http://httpbin.org/ip' } = req.body;
+    if (!isAllowedUrl(testUrl)) {
+      return res.status(400).json({ error: '无效或不允许的测试URL' });
+    }
     const axios = require('axios');
     const status = httpProxyService.getStatus();
     
